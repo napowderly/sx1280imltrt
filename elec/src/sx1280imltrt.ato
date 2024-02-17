@@ -118,6 +118,7 @@ module SX1280:
     oscillator = new Oscillator
     oscillator.xin.io ~ ic.XTA
     oscillator.xout.io ~ ic.XTB
+    oscillator.gnd ~ power.gnd
 
     # Replace crystal with 52MHz 10ppm 11pF
     oscillator.crystal -> _7D052000K01
@@ -158,6 +159,7 @@ module SX1280:
     antenna = new UFLConnector
 
     decoupling_cap.value = 100pF +/- 5%
+    decoupling_cap.package = "0402"
 
     # RF connections
     _feed ~ matching_circuit.input
@@ -165,7 +167,7 @@ module SX1280:
     pi_filter.output.io ~ decoupling_cap.1
     decoupling_cap.2 ~ antenna.input.io
 
-    antenna.input.gnd ~ decoupling_cap.2
+    antenna.input.gnd ~ power.gnd
 
 
 module PIFilter:
@@ -177,11 +179,32 @@ module PIFilter:
     c4 = new Capacitor
     l2 = new Inductor
 
+    input.gnd ~ output.gnd
+
     l2 -> _LQW15AN2N5B00D
+
+    c1.package = "0402"
+    c2.package = "0402"
+    c4.package = "0402"
 
     c1.value = 1.2pF +/- 10%
     c2.value = 1.2pF +/- 10%
     c4.value = 0.5pF +/- 10%
+
+    # C4 and L2 are in parallel
+    input.io ~ c4.1
+    c4.2 ~ output.io
+
+    input.io ~ l2.p1
+    l2.p2 ~ output.io
+
+    # C1 is input cap, C2 is output cap
+    input.io ~ c1.1
+    input.gnd ~ c1.2
+
+    output.io ~ c2.1
+    output.gnd ~ c2.2
+
 
 
 component _7D052000K01 from Crystal:
@@ -229,6 +252,7 @@ module MatchingCircuit:
     output = new Pair
 
     c0 = new Capacitor
+    c0.package = "0402"
     l1 = new Inductor
 
     c0.value = 0.8pF +/- 10%
